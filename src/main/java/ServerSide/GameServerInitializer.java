@@ -11,10 +11,10 @@ import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
 import io.netty.handler.stream.ChunkedWriteHandler;
 
 public class GameServerInitializer extends ChannelInitializer<Channel> {
-    private final ChannelGroup group;
+    private final RoomManager roomManager;
 
-    GameServerInitializer(ChannelGroup group) {
-        this.group = group;
+    GameServerInitializer(RoomManager roomManager) {
+        this.roomManager = roomManager;
     }
 
     @Override
@@ -25,6 +25,6 @@ public class GameServerInitializer extends ChannelInitializer<Channel> {
         pipeline.addLast(new HttpObjectAggregator(64 * 1024));
         pipeline.addLast(new HttpRequestHandler("/ws"));
         pipeline.addLast(new WebSocketServerProtocolHandler("/ws"));
-        pipeline.addLast(new TextWebSocketFrameHandler(group));
+        pipeline.addLast(new TextWebSocketFrameHandler(roomManager));
     }
 }

@@ -1,17 +1,20 @@
 package ServerSide;
 
 
+import com.google.common.flogger.FluentLogger;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
-import io.netty.channel.group.ChannelGroup;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 import io.netty.handler.codec.http.websocketx.WebSocketServerProtocolHandler;
+import org.json.JSONObject;
 
 public class TextWebSocketFrameHandler extends SimpleChannelInboundHandler<TextWebSocketFrame>{
-    private final ChannelGroup group;
+    private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 
-    TextWebSocketFrameHandler(ChannelGroup _group) {
-        this.group = _group;
+    private final RoomManager roomManager;
+
+    TextWebSocketFrameHandler(RoomManager roomManager) {
+        this.roomManager = roomManager;
     }
 
     @Override
@@ -31,7 +34,39 @@ public class TextWebSocketFrameHandler extends SimpleChannelInboundHandler<TextW
     protected void channelRead0(ChannelHandlerContext ctx, TextWebSocketFrame msg) throws Exception {
         //group.writeAndFlush(msg.retain());
 
+        msg.retain();
+        // Get json request
+        JSONObject request = requestParser(msg);
 
+        logger.atInfo().log(ctx.channel() + " send " + request.toString(4));
+
+        try {
+            if ( request.getInt("event") == Event.INITIAL_REQUEST ) {
+                EventHandler.responseToInitialRequest(roomManager, request.getJSONObject("data"));
+            } else if ( request.getInt("event") == Event.JOIN_ROOM ) {
+                EventHandler.responseToJoinRoom(roomManager, request.getJSONObject("data"));
+            } else if ( request.getInt("event") == Event.READY_TO_PLAY ) {
+                EventHandler.responseToReadyToPlay(roomManager, request.getJSONObject("data"));
+            } else if ( request.getInt("event") == Event.PLAY ) {
+                EventHandler.responseToPlay(roomManager, request.getJSONObject("data"));
+            }
+
+        } finally {
+            msg.release();
+        }
+    }
+
+    private JSONObject requestParser(TextWebSocketFrame msg) {
+        return new JSONObject(msg.text());
     }
 }
+
+/**
+ * Our Json message is constructed as followed
+ * {
+ *     "event" : int
+ *     "data" : {
+ *         ...
+ *     }
+ * }*/
 

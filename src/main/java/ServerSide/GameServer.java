@@ -12,7 +12,7 @@ import io.netty.util.concurrent.ImmediateEventExecutor;
 import java.net.InetSocketAddress;
 
 public class GameServer {
-    private final ChannelGroup channelGroup = new DefaultChannelGroup(ImmediateEventExecutor.INSTANCE);
+    private final RoomManager roomManager = new RoomManager();
     private final EventLoopGroup group = new NioEventLoopGroup();
     private Channel channel;
 
@@ -21,22 +21,21 @@ public class GameServer {
 
         bootstrap.group(group)
                 .channel(NioServerSocketChannel.class)
-                .childHandler(createInitializer(channelGroup));
+                .childHandler(createInitializer(roomManager));
         ChannelFuture future = bootstrap.bind(port);
         future.syncUninterruptibly();
         channel = future.channel();
         return future;
     }
 
-    private ChannelInitializer<Channel> createInitializer(ChannelGroup channelGroup) {
-        return new GameServerInitializer(channelGroup);
+    private ChannelInitializer<Channel> createInitializer(RoomManager roomManager) {
+        return new GameServerInitializer(roomManager);
     }
 
     public void destroy() {
         if (channel != null) {
             channel.close();
         }
-        channelGroup.close();
         group.shutdownGracefully();
     }
 
