@@ -17,7 +17,7 @@ public class Card {
     }
 
     public boolean isAce() {
-        if ( rank == RANK.ACE) {
+        if ( rank == RANK.Ace) {
             return true;
         }
         return false;

@@ -3,16 +3,13 @@ package ServerSide;
 
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
-import io.netty.channel.group.ChannelGroup;
-import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.util.concurrent.ImmediateEventExecutor;
 
 import java.net.InetSocketAddress;
 
 public class GameServer {
-    private final RoomManager roomManager = new RoomManager();
+    private final TableManager tableManager = new TableManager();
     private final EventLoopGroup group = new NioEventLoopGroup();
     private Channel channel;
 
@@ -21,15 +18,15 @@ public class GameServer {
 
         bootstrap.group(group)
                 .channel(NioServerSocketChannel.class)
-                .childHandler(createInitializer(roomManager));
+                .childHandler(createInitializer(tableManager));
         ChannelFuture future = bootstrap.bind(port);
         future.syncUninterruptibly();
         channel = future.channel();
         return future;
     }
 
-    private ChannelInitializer<Channel> createInitializer(RoomManager roomManager) {
-        return new GameServerInitializer(roomManager);
+    private ChannelInitializer<Channel> createInitializer(TableManager tableManager) {
+        return new GameServerInitializer(tableManager);
     }
 
     public void destroy() {

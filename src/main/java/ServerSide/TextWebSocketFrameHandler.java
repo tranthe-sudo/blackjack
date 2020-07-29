@@ -2,6 +2,8 @@ package ServerSide;
 
 
 import com.google.common.flogger.FluentLogger;
+import gameComponent.CardHolder;
+import gameComponent.Player;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
@@ -11,10 +13,10 @@ import org.json.JSONObject;
 public class TextWebSocketFrameHandler extends SimpleChannelInboundHandler<TextWebSocketFrame>{
     private static final FluentLogger logger = FluentLogger.forEnclosingClass();
 
-    private final RoomManager roomManager;
+    private final TableManager tableManager;
 
-    TextWebSocketFrameHandler(RoomManager roomManager) {
-        this.roomManager = roomManager;
+    TextWebSocketFrameHandler(TableManager tableManager) {
+        this.tableManager = tableManager;
     }
 
     @Override
@@ -38,21 +40,35 @@ public class TextWebSocketFrameHandler extends SimpleChannelInboundHandler<TextW
         // Get json request
         JSONObject request = requestParser(msg);
 
-        logger.atInfo().log(ctx.channel() + " send " + request.toString(4));
+        logger.atInfo().log(ctx.channel().id() + " has sent " + request.toString(4));
 
         try {
-            if ( request.getInt("event") == Event.INITIAL_REQUEST ) {
-                EventHandler.responseToInitialRequest(roomManager, request.getJSONObject("data"));
-            } else if ( request.getInt("event") == Event.JOIN_ROOM ) {
-                EventHandler.responseToJoinRoom(roomManager, request.getJSONObject("data"));
-            } else if ( request.getInt("event") == Event.READY_TO_PLAY ) {
-                EventHandler.responseToReadyToPlay(roomManager, request.getJSONObject("data"));
-            } else if ( request.getInt("event") == Event.PLAY ) {
-                EventHandler.responseToPlay(roomManager, request.getJSONObject("data"));
-            }
+//            if ( request.getInt("event") == Event.INITIAL_REQUEST ) {
+//                EventDispatcher.responseToInitialRequest(tableManager, ctx); // only this need reference to ctx
+//            } else if ( request.getInt("event") == Event.JOIN_ROOM ) {
+//                EventDispatcher.responseToJoinRoom(tableManager, request.getJSONObject("data"));
+//            } else if ( request.getInt("event") == Event.READY_TO_PLAY ) {
+//                EventDispatcher.responseToReadyToPlay(tableManager, request.getJSONObject("data"));
+//            } else if ( request.getInt("event") == Event.PLAY ) {
+//                EventDispatcher.responseToPlay(tableManager, request.getJSONObject("data"));
+//            }
+            EventDispatcher.dispatch(request, tableManager, ctx);
 
         } finally {
             msg.release();
+        }
+    }
+
+    // Remove player out of List Players when the channel become inActive
+    @Override
+    public void channelInactive(ChannelHandlerContext ctx) throws Exception {
+        //super.channelInactive(ctx);
+        for (CardHolder player : this.tableManager.getListPlayers()) {
+            if (player instanceof Player) {
+               if ( ((Player) player).getChannel().id() == ctx.channel().id()) {
+                   this.tableManager.removePlayer((Player) player);
+               }
+            }
         }
     }
 

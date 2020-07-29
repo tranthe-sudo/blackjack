@@ -34,4 +34,8 @@ public class Hand {
             }
         }
     }
+
+    public void flush() {
+        hand.clear();
+    }
 }
