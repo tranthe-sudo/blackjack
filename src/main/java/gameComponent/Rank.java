@@ -1,6 +1,6 @@
 package gameComponent;
 
-public enum RANK {
+public enum Rank {
 
     Two (2, "2"),
     Three (3, "3"),
@@ -18,7 +18,7 @@ public enum RANK {
 
     private int value;
     private String string;
-    RANK(int value, String string) {
+    Rank(int value, String string) {
         this.value = value;
         this.string = string;
     }

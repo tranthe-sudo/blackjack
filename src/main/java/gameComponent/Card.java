@@ -3,10 +3,10 @@ package gameComponent;
 public class Card {
 
     private int value;
-    private SUIT suit;
-    private RANK rank;
+    private Suit suit;
+    private Rank rank;
 
-    Card (SUIT suit, RANK rank) {
+    public Card (Suit suit, Rank rank) {
         this.suit = suit;
         this.rank = rank;
         this.value = rank.getValue();
@@ -17,19 +17,18 @@ public class Card {
     }
 
     public boolean isAce() {
-        if ( rank == RANK.Ace) {
+        if ( rank == Rank.Ace) {
             return true;
         }
         return false;
     }
 
-    public RANK getRank() {
+    public Rank getRank() {
         return rank;
     }
 
     @Override
     public String toString() {
-        // e.g seven_of_heart
         return rank.toString() + "_of_" + suit.toString();
     }
 }

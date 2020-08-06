@@ -10,10 +10,11 @@ public class Dealer extends CardHolder {
 
     @Override
     public JSONObject constructJsonObject() {
-        JSONObject player = new JSONObject();
-        player.put("type", getType());
+        JSONObject dealer = new JSONObject();
+        dealer.put("type", getType());
+        dealer.put("cards", cardsToJSONArray());
 
-        return  player;
+        return dealer;
     }
 
     public JSONObject getPlayerJson() {

@@ -1,7 +1,6 @@
 package ServerSide;
 
 import gameComponent.*;
-import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
@@ -17,18 +16,30 @@ public class TableManager {
     private int maxPlayers = Integer.valueOf(configuration.getString("maximum_players_per_room"));
 
     // Reference to Blackjack game controller
-    Game game = new Game();
+    Game game = new Game(this);
+
 
     private ChannelGroup channelGroup;
     private boolean isLock;
-    private LinkedList<CardHolder> listPlayers = new LinkedList<>();
+    private boolean firstRound;
+    volatile private LinkedList<CardHolder> listPlayers = new LinkedList<>();
 
 
 
     TableManager() {
         this.channelGroup = new DefaultChannelGroup(ImmediateEventExecutor.INSTANCE);
+        Dealer dealer = new Dealer();
+        this.listPlayers.addLast(dealer);
+        this.firstRound = true;
     }
 
+    public boolean isFirstRound() {
+        return this.firstRound;
+    }
+
+    public void setFirstRound(boolean value) {
+        this.firstRound = false;
+    }
 
     public void lock() {
         this.isLock = true;
@@ -57,16 +68,24 @@ public class TableManager {
 
 
     // - Add game logic here --------------
-    public void gameInit() {
-        game.init(this);
+    public void startNewRound() {
+        startNewRound();
     }
 
-    public void playerPlayHit() {
+    public void initGame() {
+        game.init();
+    }
+
+    public void hitFromPlayer() {
         game.playHit();
     }
 
-    public void playerPlayStay() {
+    public void stayFromPlayer() {
         game.playStay();
+    }
+
+    public void dealCard() {
+        game.dealCard();
     }
 
 
@@ -79,11 +98,20 @@ public class TableManager {
         this.channelGroup.writeAndFlush(new TextWebSocketFrame(message));
     }
 
-//    public void sendToOneClient(ChannelHandlerContext ctx, String message) {
-////        ctx.writeAndFlush(new TextWebSocketFrame(message));
-////    }
 
     public int getNumberOfPlayers () {
         return listPlayers.size();
+    }
+
+    public boolean isAllReady() {
+        for (CardHolder player: listPlayers) {
+            if ( player instanceof Player ) {
+                if ( !((Player) player).isReady() ) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
     }
 }

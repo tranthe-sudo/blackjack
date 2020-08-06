@@ -1,6 +1,6 @@
 package gameComponent;
 
-public enum SUIT {
+public enum Suit {
     Spade ("spade"),
     Club ("club"),
     Diamond ("diamond"),
@@ -9,7 +9,7 @@ public enum SUIT {
 
     private String string;
 
-    SUIT(String string) {
+    Suit(String string) {
         this.string = string;
     };
 

@@ -40,7 +40,7 @@ public class TextWebSocketFrameHandler extends SimpleChannelInboundHandler<TextW
         // Get json request
         JSONObject request = requestParser(msg);
 
-        logger.atInfo().log(ctx.channel().id() + " has sent " + request.toString(4));
+        //logger.atInfo().log(ctx.channel().id() + " has sent " + request.toString(4));
 
         try {
 //            if ( request.getInt("event") == Event.INITIAL_REQUEST ) {
@@ -70,6 +70,12 @@ public class TextWebSocketFrameHandler extends SimpleChannelInboundHandler<TextW
                }
             }
         }
+    }
+
+    @Override
+    public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
+        cause.printStackTrace();
+
     }
 
     private JSONObject requestParser(TextWebSocketFrame msg) {

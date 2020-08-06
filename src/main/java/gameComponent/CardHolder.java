@@ -1,5 +1,6 @@
 package gameComponent;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 public abstract class CardHolder {
@@ -21,8 +22,16 @@ public abstract class CardHolder {
         return constructJsonObject();
     }
 
-    public String getPlayerJsonString() {
-        return constructJsonObject().toString();
+    public JSONArray cardsToJSONArray() {
+        String[] arrOfStringCards = new String[hand.getListCards().size()];
+        int index = 0;
+
+        for ( Card card : hand.getListCards() ) {
+            arrOfStringCards[index] = card.toString();
+            index++;
+        }
+
+        return new JSONArray(arrOfStringCards);
     }
 
     public abstract String getType();

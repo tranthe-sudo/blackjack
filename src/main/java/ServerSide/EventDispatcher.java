@@ -1,8 +1,6 @@
 package ServerSide;
 
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 public final class EventDispatcher {
@@ -16,10 +14,13 @@ public final class EventDispatcher {
                 Controller.responseToRequestJoinTable(request, tableManager, ctx);
                 break;
             case Event.REQUEST_TO_PLAY:
+                Controller.responseToRequestToPlay(request, tableManager, ctx);
                 break;
             case Event.PLAY_HIT:
+                Controller.responseToHitRequest(request, tableManager, ctx);
                 break;
             case Event.PLAY_STAY:
+                Controller.responseToStayRequest(request, tableManager, ctx);
                 break;
             default:
                 break;

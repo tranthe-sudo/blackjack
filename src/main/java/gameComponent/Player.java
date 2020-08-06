@@ -1,14 +1,13 @@
 package gameComponent;
 
 import io.netty.channel.Channel;
-import io.netty.channel.ChannelId;
 import org.json.JSONObject;
 
 
 public class Player extends CardHolder {
     private String name;
     boolean readyToPlay;
-    ChannelId playerID;
+    String playerID;
     private boolean current;
 
     private int state;
@@ -16,7 +15,7 @@ public class Player extends CardHolder {
 
     public Player(Channel channel, String name) {
         this.channel = channel;
-        this.playerID = channel.id();
+        this.playerID = channel.id().asLongText();
         this.name = name;
 
         this.state = State.NULL;
@@ -31,12 +30,15 @@ public class Player extends CardHolder {
 
     public boolean isReady() { return readyToPlay; }
     public void ready() { this.readyToPlay = true; };
+    public void setReadyToPlay(boolean value) {
+        this.readyToPlay = value;
+    }
 
     public void setCurrent(boolean value) { current = value; }
 
     public boolean getCurrent () { return current; }
 
-    public ChannelId getPlayerID() { return playerID; }
+    public String getPlayerID() { return this.playerID; }
 
     public Channel getChannel() { return channel; }
 
@@ -46,9 +48,6 @@ public class Player extends CardHolder {
 
     public void reset() {
         super.reset();
-        // set ready to play to false. This require user to
-        // press the ready button to start a new round
-        this.readyToPlay = false;
         this.current = false;
 
     }
@@ -61,6 +60,8 @@ public class Player extends CardHolder {
         player.put("name", this.name);
         player.put("isCurrent", this.getCurrent());
         player.put("state", this.getState());
+        player.put("isReady", this.readyToPlay);
+        player.put("cards", this.cardsToJSONArray());
 
         return  player;
     }

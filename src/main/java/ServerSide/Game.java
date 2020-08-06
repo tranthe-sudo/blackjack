@@ -1,40 +1,60 @@
 package ServerSide;
 
 import gameComponent.*;
-import io.netty.channel.ChannelId;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.LinkedList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 
 public class Game {
-    private ChannelId currentPlayerID;
+
     private int currentIndex;
-    private Player currentPlayer;
 
     private LinkedList<CardHolder> listPlayers;
     private Dealer dealer;
     private Deck deck;
 
-    public Game() { }
+    private Timer timer;
+    private TableManager tableManager;
 
-    public void init(TableManager tableManager) {
+    public Game(TableManager tableManager) {
+        this.timer = new Timer();
+        this.tableManager = tableManager;
+    }
+
+    public void init() {
         listPlayers = tableManager.getListPlayers();
         currentIndex = 0;
-        currentPlayer = ((Player) listPlayers.get(currentIndex));
-        currentPlayerID = currentPlayer.getPlayerID();
-        currentPlayer.setCurrent(true);
-        dealer = new Dealer();
+        ((Player) listPlayers.get(currentIndex)).setCurrent(true);
         deck = new Deck();
-        listPlayers.addLast(dealer);
+
+        for (CardHolder c : listPlayers) {
+            if ( c.getType() == "dealer") {
+                dealer = (Dealer) c;
+            }
+        }
+
     }
 
     public void startNewRound() {
-        currentIndex = 0;
-        currentPlayerID = ((Player) listPlayers.get(currentIndex)).getPlayerID();
         deck.resetDeck();
         for ( CardHolder player : listPlayers) {
             player.reset();
         }
+
+        this.currentIndex = 0;
+        ((Player) listPlayers.get(currentIndex)).setCurrent(true);
+
+        for (CardHolder player : listPlayers) {
+            if ( player.getType() == "player") {
+                ((Player) player).setState(State.NULL);
+            }
+        }
+
+        dealCard();
     }
 
     public void dealCard() {
@@ -46,21 +66,31 @@ public class Game {
     }
 
     public void playHit() {
-        currentPlayer = ((Player) listPlayers.get(currentIndex));
-        if ( currentPlayer.getTotalPoint() > 21 ) {
-            currentPlayer.setState(State.LOSE);
+
+        ((Player) listPlayers.get(currentIndex)).getDealt(deck.draw());
+        System.out.println(currentIndex);
+        System.out.println(((Player) listPlayers.get(currentIndex)).getPlayerID());
+        System.out.println(((Player) listPlayers.get(currentIndex)).getTotalPoint());
+        System.out.println("iscurrent > 21" + (((Player) listPlayers.get(currentIndex)).getTotalPoint() > 21));
+
+        if ( ((Player) listPlayers.get(currentIndex)).getTotalPoint() > 21 ) {
+            ((Player) listPlayers.get(currentIndex)).setState(State.LOSE);
             promoteNext();
-        } else {
-            currentPlayer.getDealt(deck.draw());
         }
     }
 
     public void playStay() {
-        currentPlayer.setState(State.NULL);
+        ((Player) listPlayers.get(currentIndex)).setState(State.NULL);
         promoteNext();
     }
 
     private void promoteNext() {
+        ((Player) listPlayers.get(currentIndex)).setCurrent(false);
+
+        System.out.println("increment currentIndex");
+        currentIndex += 1;
+
+        System.out.println("currentIndex" + currentIndex);
         if ( currentIndex == listPlayers.size() - 1 ) {
             while ( dealer.getTotalPoint() < 17 ) {
                 dealer.getDealt(deck.draw());
@@ -91,15 +121,30 @@ public class Game {
                 }
             }
 
-        } else {
-            currentPlayer.setCurrent(false);
-            currentIndex += 1;
-            currentPlayer = ((Player) listPlayers.get(currentIndex));
-            currentPlayerID = currentPlayer.getPlayerID();
-        }
-    }
+            // Set timer to start new round
+            timer.schedule(new TimerTask() {
+                @Override
+                public void run() {
+                    startNewRound();
 
-    public ChannelId getCurrentPlayerID() {
-        return currentPlayerID;
+                    JSONObject broadcastResponse = new JSONObject();
+
+                    JSONArray playersArrayJSON = new JSONArray();
+                    for (CardHolder p : tableManager.getListPlayers()) {
+                        playersArrayJSON.put(p.getPlayerJson());
+                    }
+
+                    JSONObject data = new JSONObject();
+                    data.put("players", playersArrayJSON);
+                    broadcastResponse.put("event", Event.UPDATE_TABLE_STATE_BROADCAST_RESPONSE);
+                    broadcastResponse.put("data", data);
+
+                    tableManager.broadcast(broadcastResponse.toString());
+                }
+            }, 8 * 1000);
+
+        } else {
+            ((Player) listPlayers.get(currentIndex)).setCurrent(true);
+        }
     }
 }
