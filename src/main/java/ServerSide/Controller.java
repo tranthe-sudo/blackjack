@@ -80,26 +80,9 @@ public class Controller {
                 updateBroadcast(Event.UPDATE_TABLE_STATE_BROADCAST_RESPONSE, tableManager);
             }
         }
-
-        // Test purpose
-        JSONObject broadcastResponse = new JSONObject();
-        JSONArray players = new JSONArray();
-        for (CardHolder p : tableManager.getListPlayers()) {
-            players.put(p.getPlayerJson());
-        }
-
-        JSONObject data2 = new JSONObject();
-        data2.put("players", players);
-        broadcastResponse.put("event", "101");
-        broadcastResponse.put("data", data2);
-        System.out.println("--------------------------------------------");
-        System.out.println(broadcastResponse.toString(2));
-        System.out.println("--------------------------------------------");
-
     }
 
     public static void responseToHitRequest(JSONObject request, TableManager tableManager, ChannelHandlerContext ctx) {
-        System.out.println("Hit from Player");
         tableManager.hitFromPlayer();
         updateBroadcast(Event.UPDATE_TABLE_STATE_BROADCAST_RESPONSE, tableManager);
 
@@ -107,7 +90,6 @@ public class Controller {
 
     public static void responseToStayRequest(JSONObject request, TableManager tableManager, ChannelHandlerContext ctx) {
         tableManager.stayFromPlayer();
-        System.out.println("Stay from Player");
         updateBroadcast(Event.UPDATE_TABLE_STATE_BROADCAST_RESPONSE, tableManager);
     }
 
